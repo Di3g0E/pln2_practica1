@@ -87,4 +87,4 @@ if __name__ == '__main__':
     data_dir_path = project_root / "data"
 
     # Llamamos solo con df1=True (df2=False por defecto)
-    download_datasets(dir_path=data_dir_path, df1=True, df2=False)
+    download_datasets(dir_path=data_dir_path, df1=True, df2=True)
