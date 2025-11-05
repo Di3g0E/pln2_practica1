@@ -133,5 +133,5 @@ def cargar_dataset(filename="tcc_ceds_music.csv"):
 #     project_root = script_file_path.parent.parent.parent
 #     data_dir_path = project_root / "data"
 
-#     # Llamamos solo con df1=True (df2=False por defecto)
-#     download_datasets(dir_path=data_dir_path, df1=True, df2=False)
+    # Llamamos solo con df1=True (df2=False por defecto)
+    download_datasets(dir_path=data_dir_path, df1=True, df2=False)
