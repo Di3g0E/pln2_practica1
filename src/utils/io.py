@@ -2,6 +2,8 @@ import kagglehub
 import pathlib
 import os
 import shutil # Necesitamos shutil para mover archivos y borrar directorios
+import pandas as pd
+
 
 def download_datasets(dir_path="data", df1=True, df2=True):
     
@@ -79,12 +81,57 @@ def download_datasets(dir_path="data", df1=True, df2=True):
         except OSError as e:
             print(f"Error al limpiar el directorio {cleanup_path}: {e}")
 
+def cargar_dataset(filename="tcc_ceds_music.csv"):
+    """
+    Carga un dataset (archivo .csv) desde la carpeta 'data'.
 
-if __name__ == '__main__':
-    # Calcular la ruta de la carpeta 'data' en la raíz del proyecto
-    script_file_path = pathlib.Path(__file__)
-    project_root = script_file_path.parent.parent.parent
-    data_dir_path = project_root / "data"
+    Args:
+        filename (str): El nombre del archivo (ej. "archive.csv").
 
-    # Llamamos solo con df1=True (df2=False por defecto)
-    download_datasets(dir_path=data_dir_path, df1=True, df2=False)
+    Returns:
+        pd.DataFrame: El DataFrame cargado, o None si hay un error.
+    """
+    
+    # --- 1. Calcular la ruta a la carpeta 'data' ---
+    # Esta lógica es la misma que usamos en el bloque __main__
+    
+    try:
+        # Ruta de este script (io.py)
+        script_file_path = pathlib.Path(__file__)
+        # Ruta de la raíz del proyecto ('..')
+        project_root = script_file_path.parent.parent.parent
+        # Ruta del directorio 'data'
+        data_dir = project_root + "/" + "data"
+    except NameError:
+        # __file__ no está definido si se ejecuta en un notebook/REPL
+        # Asumimos una ruta relativa estándar
+        print("Advertencia: __file__ no está definido. Usando ruta relativa './data'")
+        data_dir = pathlib.Path("./data")
+        
+    # --- 2. Construir la ruta completa al archivo ---
+    file_path = data_dir + "/" + filename
+    
+    # --- 3. Comprobar si el archivo existe y cargarlo ---
+    if not file_path.exists():
+        print(f"Error: El archivo no se encontró en: {file_path}")
+        print(f"Asegúrate de que '{filename}' exista en la carpeta 'data'.")
+        return None
+        
+    try:
+        df = pd.read_csv(file_path)
+        print(f"Dataset '{filename}' cargado exitosamente.")
+        return df
+    except Exception as e:
+        print(f"Error al leer el archivo {file_path}: {e}")
+        return None
+
+
+
+# if __name__ == '__main__':
+#     # Calcular la ruta de la carpeta 'data' en la raíz del proyecto
+#     script_file_path = pathlib.Path(__file__)
+#     project_root = script_file_path.parent.parent.parent
+#     data_dir_path = project_root / "data"
+
+#     # Llamamos solo con df1=True (df2=False por defecto)
+#     download_datasets(dir_path=data_dir_path, df1=True, df2=False)
