@@ -1,2 +1,3 @@
 # Ignorar un archivo CSV específico en la carpeta data
 data/song_lyrics.csv
+data/en_song_lyrics.csv
