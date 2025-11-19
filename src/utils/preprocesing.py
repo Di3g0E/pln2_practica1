@@ -1,9 +1,8 @@
 import pandas as pd
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import seaborn as sns
+import json
+import pathlib
+
 from src.utils.io import DatasetManager # Importamos tu clase existente
-# import pathlib
 
 class DataProcessor:
     def __init__(self, dataset_manager=DatasetManager(), seed=42):
@@ -26,40 +25,25 @@ class DataProcessor:
         except Exception as e:
             print(f"Aviso: No se pudo cargar datos: {e}")
 
-    def normalize_labels(self, threshold=100000):
+    def normalize_labels(self, threshold=80000):
         """
         Punto 3 revisado: Normaliza texto y convierte a valores numéricos.
         Entrada: ['rap', 'rb', 'rock', 'pop', 'misc', 'country']
-        Salida: Enteros [0, 1, 2, 3, 4]
+        Salida: Enteros [0, 1, 2, 3, 4, 5]
         """
         if self.df is None: return
 
-        # 1. Limpieza básica de strings
-        self.df['label'] = self.df['label'].astype(str).str.strip().str.lower()
-
-        # 2. Definir mapa de etiquetas (Ajusta esto según tus datos reales)
-        label_map = {
-            'rap': 'Hip Hop',
-            'rb': 'R&B',
-            'rock': 'Rock',
-            'pop': 'Pop',
-            'country': 'Country'
-            # 'misc' se ignora aquí para que se convierta en NaN y se elimine
-        }
-        
-        print("\nEstandarizando nombres de etiquetas...")
-        # Creamos una columna temporal para el nombre legible
-        self.df['label_name'] = self.df['label'].map(label_map)
-        
-        # Eliminamos 'misc' o etiquetas no mapeadas (NaN)
-        n_dropped = self.df['label_name'].isna().sum()
+        # Eliminamos etiquetas no mapeadas (NaN)
+        n_dropped = self.df['label'].isna().sum()
         if n_dropped > 0:
-            print(f"Eliminando {n_dropped} filas (misc/desconocidos).")
-            self.df = self.df.dropna(subset=['label_name'])
+            print(f"Eliminando {n_dropped} filas (desconocidos).")
+            self.df = self.df.dropna(subset=['label'])
+        else: 
+            print(f"No hay filas con valores desconocidos.")
 
         # 2. Conversión a Numérico (Label Encoding)
         # Ordenamos alfabéticamente para asegurar determinismo: Country=0, Hip Hop=1, etc.
-        unique_labels = sorted(self.df['label_name'].unique())
+        unique_labels = sorted(self.df['label'].unique())
         
         # Creamos los diccionarios de mapeo
         self.label2id = {label: i for i, label in enumerate(unique_labels)}
@@ -68,14 +52,11 @@ class DataProcessor:
         print(f"Asignando IDs numéricos: {self.label2id}")
         
         # Sobrescribimos la columna 'label' con el entero
-        self.df['label'] = self.df['label_name'].map(self.label2id)
-        
-        # Borramos la columna temporal de nombres para ahorrar memoria
-        self.df = self.df.drop(columns=['label_name']) 
+        self.df['label'] = self.df['label'].map(self.label2id)
         
         # Filtrar clases con muy pocos ejemplos (ruido)
         conteo = self.df['label'].value_counts()
-        clases_validas = conteo[conteo > (self.df.shape[0] * threshold)].index # Umbral mínimo
+        clases_validas = conteo[conteo > threshold].index # Umbral mínimo
         self.df = self.df[self.df['label'].isin(clases_validas)]
         
         print(f"Clases resultantes: {self.df['label'].unique()}")
@@ -104,31 +85,61 @@ class DataProcessor:
         print(f"--> Filas eliminadas: {original_size - final_size}")
         print(f"--> Dataset limpio: {final_size}")
 
-    def handle_imbalance(self, method='sampling', max_per_class=10000):
+    def handle_imbalance(self):
         """
-        Punto 5: Controlar el desbalance.
-        Estrategia: Downsampling de la clase mayoritaria para no explotar en entrenamiento.
+        Punto 5: Controlar el desbalance (Undersampling estricto).
+        Estrategia: Reducir todas las clases al tamaño de la clase minoritaria.
         """
-        print("\nGestionando desbalance de clases...")
-        conteo = self.df['label'].value_counts()
-        print("Distribución original:")
-        print(conteo)
+        if self.df is None: return
 
-        if method == 'sampling':
-            # Downsampling estratificado
-            dfs_list = []
-            for label, group in self.df.groupby('label'):
-                if len(group) > max_per_class:
-                    dfs_list.append(group.sample(max_per_class, random_state=self.seed))
-                else:
-                    dfs_list.append(group)
-            
-            self.df = pd.concat(dfs_list).sample(frac=1, random_state=self.seed).reset_index(drop=True)
-            print("\nDistribución tras sampling:")
-            print(self.df['label'].value_counts())
-            
+        print("\nGestionando desbalance de clases...")
+        conteo_inicial = self.df['label'].value_counts()
+        print("Distribución original:")
+        print(conteo_inicial)
+        
+        # 1. Identificar el tamaño de la clase más pequeña
+        min_samples = conteo_inicial.min()
+
+        # 2. Aplicar undersampling
+        # Agrupamos por etiqueta y tomamos una muestra aleatoria de tamaño 'min_samples' de cada grupo
+        dfs_list = []
+        for label, group in self.df.groupby('label'):
+            dfs_list.append(group.sample(n=min_samples, random_state=self.seed))
+        
+        # 3. Concatenar y mezclar (shuffle)
+        self.df = pd.concat(dfs_list).sample(frac=1, random_state=self.seed).reset_index(drop=True)
+        
+        print("\nDistribución tras balanceo estricto:")
+        print(self.df['label'].value_counts())
+
     def save(self, filename="dataset_harmonized.csv"):
         self.dm.save_dataset(self.df, filename)
 
     def get_df(self):
         return self.df
+
+    def set_df(self, df):
+        self.df = df
+
+    def save_mappings(self, filename="label_mapping.json"):
+        """
+        Guarda los diccionarios id2label y label2id en un archivo JSON.
+        """
+        if not hasattr(self, 'id2label') or not self.id2label:
+            print("Error: No hay mapeos definidos. Ejecuta normalize_labels() primero.")
+            return
+
+        # Definimos la ruta (guardamos en la misma carpeta que los datos)
+        filepath = self.dm.data_path / filename
+        
+        data = {
+            "id2label": self.id2label,
+            "label2id": self.label2id
+        }
+        
+        try:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=4)
+            print(f"Mapeos guardados exitosamente en: {filepath}")
+        except Exception as e:
+            print(f"Error al guardar mapeos: {e}")

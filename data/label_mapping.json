@@ -1,0 +1,18 @@
+{
+    "id2label": {
+        "0": "country",
+        "1": "misc",
+        "2": "pop",
+        "3": "rap",
+        "4": "rb",
+        "5": "rock"
+    },
+    "label2id": {
+        "country": 0,
+        "misc": 1,
+        "pop": 2,
+        "rap": 3,
+        "rb": 4,
+        "rock": 5
+    }
+}
