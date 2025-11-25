@@ -1,5 +1,11 @@
 # Ignorar un archivo CSV específico en la carpeta data
-data/song_lyrics.csv
-data/tcc_ceds_music.csv
-data/en_song_lyrics.csv
-data/en_song_lyrics_clear.csv
+data/*.csv
+
+# Entornos de Python
+*.venv
+
+# PyCharm
+*.idea
+
+# Cache
+__pycache__/
