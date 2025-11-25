@@ -3,3 +3,13 @@ data/song_lyrics.csv
 data/tcc_ceds_music.csv
 data/en_song_lyrics.csv
 data/en_song_lyrics_clear.csv
+
+# Ignorar archivos de documentación menos el .pdf final
+documentacion.aux
+documentacion.log
+documentacion.out
+documentacion.fdb_latexmk
+documentacion.fls
+documentacion.toc
+documentacion.tex
+documentacion.synctex.gz

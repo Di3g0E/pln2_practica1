@@ -22,6 +22,7 @@ class BaselineTrainer:
         self.y_train = None
         self.y_val = None
         self.y_test = None
+        self.X_test_raw = None
 
     def prepare_data(self):
         """
@@ -44,6 +45,7 @@ class BaselineTrainer:
         self.y_train = y_train
         self.y_val = y_val
         self.y_test = y_test
+        self.X_test_raw = X_test_raw
 
         print(f"Tamaños -> Train: {len(X_train_raw)}, Val: {len(X_val_raw)}, Test: {len(X_test_raw)}")
 
