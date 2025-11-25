@@ -1,8 +1,13 @@
 # Ignorar un archivo CSV específico en la carpeta data
 data/song_lyrics.csv
 data/tcc_ceds_music.csv
+src/data/tcc_ceds_music.csv
 data/en_song_lyrics.csv
 data/en_song_lyrics_clear.csv
+
+# Ignorar archivos compilados de Python
+__pycache__/
+*.py[cod]
 
 # Ignorar archivos de documentación menos el .pdf final
 documentacion.aux
