@@ -105,6 +105,15 @@ class TransformerTrainer:
         self.trainer.train()
         print("Entrenamiento finalizado.")
 
+    def save_model(self, path):
+        """
+        Guarda el modelo y el tokenizador en la ruta especificada.
+        """
+        print(f"Guardando modelo en {path}...")
+        self.trainer.save_model(path)
+        self.tokenizer.save_pretrained(path)
+        print("Modelo guardado exitosamente.")
+
     def evaluate(self):
         """
         Evalúa el modelo en el conjunto de test.

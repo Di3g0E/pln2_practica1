@@ -143,3 +143,25 @@ class DataProcessor:
             print(f"Mapeos guardados exitosamente en: {filepath}")
         except Exception as e:
             print(f"Error al guardar mapeos: {e}")
+
+    def load_mappings(self, filename="label_mapping.json"):
+        """
+        Carga los diccionarios id2label y label2id desde un archivo JSON.
+        """
+        filepath = self.dm.data_path / filename
+        
+        if not filepath.exists():
+            print(f"Error: El archivo {filepath} no existe.")
+            return
+
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+            # Convertir claves de id2label a enteros (JSON guarda claves como strings)
+            self.id2label = {int(k): v for k, v in data["id2label"].items()}
+            self.label2id = data["label2id"]
+            
+            print(f"Mapeos cargados exitosamente desde: {filepath}")
+        except Exception as e:
+            print(f"Error al cargar mapeos: {e}")
