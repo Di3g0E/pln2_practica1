@@ -10,12 +10,9 @@ data/*.csv
 # Cache
 __pycache__/
 
-# Ignorar archivos de documentación menos el .pdf final
-documentacion.aux
-documentacion.log
-documentacion.out
-documentacion.fdb_latexmk
-documentacion.fls
-documentacion.toc
-documentacion.tex
-documentacion.synctex.gz
+# Datos generados
+data/generated/*
+
+# Modelos guardados
+models/*.pkl
+models/transformer_model/*

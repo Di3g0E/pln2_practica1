@@ -1,0 +1,16 @@
+{
+    "name": "Genius Song Lyrics",
+    "csv_name": "genius-lyrics.csv",
+    "kagglehub_handle": "mateibejan/multilingual-lyrics-for-genre-classification",
+    "csv_path": "",
+    "cols_map": {
+        "lyrics": "text",
+        "tag": "label",
+        "language": "language"
+    },
+    "language_col": "language",
+    "target_language": "en",
+    "vectorizer_config": {
+        "stop_words": "english"
+    }
+}

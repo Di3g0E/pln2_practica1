@@ -1,0 +1,16 @@
+{
+    "name": "Multi-Lingual Lyrics for Genre Classification",
+    "csv_name": "multi_lingual-lyrics.csv",
+    "kagglehub_handle": "mateibejan/multilingual-lyrics-for-genre-classification",
+    "csv_path": "",
+    "cols_map": {
+        "Lyrics": "text",
+        "Genre": "label",
+        "Language": "language"
+    },
+    "language_col": "language",
+    "target_language": "en",
+    "vectorizer_config": {
+        "stop_words": "english"
+    }
+}
