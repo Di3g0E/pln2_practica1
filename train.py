@@ -97,59 +97,61 @@ def main():
     print(f"- Semilla utilizada para reproducibilidad: {SEED}")
     print(f"- Descarga de datasets: {'Sí' if DOWNLOAD_DATASETS else 'No'}")
 
-    # Descargar los datasets si es necesario
-    if DOWNLOAD_DATASETS:
-        dataset_manager = LyricsDatasetManager(directory=DATA_DIR)
-        dataset_manager.download_lyrics_datasets(df1=True, df2=True)
-        dataset_paths = dataset_manager.get_datasets_paths()
+    if not USE_PREPROCESSED_DATASETS:
+        # Descargar los datasets si es necesario
+        if DOWNLOAD_DATASETS:
+            dataset_manager = LyricsDatasetManager(directory=DATA_DIR)
+            dataset_manager.download_lyrics_datasets(df1=True, df2=True)
+            dataset_paths = dataset_manager.get_datasets_paths()
+        else:
+            dataset_paths = [DATA_DIR/"genius-lyrics.csv",
+                             DATA_DIR/"multi_lingual-lyrics.csv"]
 
-    else:
-        dataset_paths = [DATA_DIR/"genius-lyrics.csv",
-                         DATA_DIR/"multi_lingual-lyrics.csv"]
+        # Obtenemos las configuraciones de los datasets
+        genius_config = LyricsDatasetConfig(config_path=GENIUS_CONFIG_PATH)
+        multilingual_config = LyricsDatasetConfig(
+            config_path=MULTILINGUAL_CONFIG_PATH)
 
-    # Obtenemos las configuraciones de los datasets
-    genius_config = LyricsDatasetConfig(config_path=GENIUS_CONFIG_PATH)
-    multilingual_config = LyricsDatasetConfig(
-        config_path=MULTILINGUAL_CONFIG_PATH)
+        # Cargamos los datasets
+        data_loader = LyricsDataLoader(
+            csv_paths=dataset_paths,
+            usecols=[genius_config.cols_map.keys(
+            ), multilingual_config.cols_map.keys()]
+        )
+        datasets = list(data_loader.get_loaded_datasets().values())
 
-    # Cargamos los datasets
-    data_loader = LyricsDataLoader(
-        csv_paths=dataset_paths,
-        usecols=[genius_config.cols_map.keys(
-        ), multilingual_config.cols_map.keys()]
-    )
-    datasets = list(data_loader.get_loaded_datasets().values())
+        # Preprocesamos el dataset
+        data_processor = LyricsDataProcessor(
+            output_dir=TRANSFORMER_OUTPUT_DIR,
+            datasets=datasets,
+            dataset_configs=[genius_config, multilingual_config],
+            genre_map=GENRE_MAP,
+            label2id=LABEL2ID,
+            id2label=ID2LABEL,
+            eval_split=EVAL_SPLIT,
+            test_split=TEST_SPLIT,
+            transformer_model_name=TRANSFORMER_MODEL_NAME,
+            device=DEVICE
+        )
+        data_processor.harmonize_pipeline()
 
-    # Preprocesamos el dataset
-    data_processor = LyricsDataProcessor(
-        output_dir=TRANSFORMER_OUTPUT_DIR,
-        datasets=datasets,
-        dataset_configs=[genius_config, multilingual_config],
-        genre_map=GENRE_MAP,
-        label2id=LABEL2ID,
-        id2label=ID2LABEL,
-        eval_split=EVAL_SPLIT,
-        test_split=TEST_SPLIT,
-        transformer_model_name=TRANSFORMER_MODEL_NAME,
-        device=DEVICE
-    )
-    data_processor.harmonize_pipeline()
-
-    # Guardamos los datos preprocesados
-    data_processor.save_all()
+        # Guardamos los datos preprocesados
+        data_processor.save_all()
 
     # Cargamos los datos
     X_train_baseline = LyricsDataProcessor.load_data_baseline(
-        DATA_OUTPUT_DIR / "X_train_baseline.npz")
+        PREPROCESSED_DATA_DIR / "X_train_baseline.npz")
     X_eval_baseline = LyricsDataProcessor.load_data_baseline(
-        DATA_OUTPUT_DIR / "X_eval_baseline.npz")
-    y_train = LyricsDataProcessor.load_label(DATA_OUTPUT_DIR / "y_train.npy")
-    y_eval = LyricsDataProcessor.load_label(DATA_OUTPUT_DIR / "y_eval.npy")
+        PREPROCESSED_DATA_DIR / "X_eval_baseline.npz")
+    y_train = LyricsDataProcessor.load_label(
+        PREPROCESSED_DATA_DIR / "y_train.npy")
+    y_eval = LyricsDataProcessor.load_label(
+        PREPROCESSED_DATA_DIR / "y_eval.npy")
 
     train_dataset_transformer = LyricsDataProcessor.load_dataset_transformer(
-        DATA_OUTPUT_DIR / "train_dataset_transformer")
+        PREPROCESSED_DATA_DIR / "train_dataset_transformer")
     eval_dataset_transformer = LyricsDataProcessor.load_dataset_transformer(
-        DATA_OUTPUT_DIR / "eval_dataset_transformer")
+        PREPROCESSED_DATA_DIR / "eval_dataset_transformer")
 
     # Entrenamos el modelo baseline
     baseline_model = BaselineModel()
